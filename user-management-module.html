@@ -1,0 +1,435 @@
+<!-- 用户管理 -->
+<div id="user-management" class="content-section">
+    <div class="header">
+        <h2><i class="fas fa-users"></i> 用户管理</h2>
+        <div class="search-bar">
+            <input type="text" placeholder="搜索用户...">
+            <button class="btn btn-primary"><i class="fas fa-search"></i> 搜索</button>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">用户列表</div>
+            <button class="btn btn-primary" id="addUserBtn"><i class="fas fa-plus"></i> 添加用户</button>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>用户ID</th>
+                            <th>主技术</th>
+                            <th>技术等级</th>
+                            <th>收入</th>
+                            <th>已接订单</th>
+                            <th>已发布订单</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 数据将通过JS动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- 分页控件 -->
+            <div id="orderPagination" class="pagination-controls">
+                <!-- 分页按钮将通过JS动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户详情模态框 -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModalTitle">添加新用户</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>用户ID</label>
+                    <input type="text" class="form-control" id="userId">
+                </div>
+                
+                <div class="form-group">
+                    <label>主技术</label>
+                    <input type="text" class="form-control" id="userSkill">
+                </div>
+                
+                <div class="form-group">
+                    <label>技术等级</label>
+                    <select class="form-control" id="userSkillLevel">
+                        <option value="1">* (初级)</option>
+                        <option value="2">** (中级)</option>
+                        <option value="3">*** (高级)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>收入 (¥)</label>
+                    <input type="number" class="form-control" id="userIncome">
+                </div>
+                
+                <div class="form-group">
+                    <label>已接订单</label>
+                    <input type="text" class="form-control" id="userAcceptedOrders">
+                </div>
+                
+                <div class="form-group">
+                    <label>已发布订单</label>
+                    <input type="text" class="form-control" id="userPublishedOrders">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="cancelUserBtn">取消</button>
+                <button class="btn btn-primary" id="saveUserBtn">保存</button>
+            </div>
+        </div>
+    </div>
+    <!-- 修改技术领域模态框 -->
+    <div class="modal" id="domainModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>修改用户技术领域</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>用户ID</label>
+                    <input type="text" class="form-control" id="domainUserId" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>当前技术领域</label>
+                    <input type="text" class="form-control" id="currentDomain" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>选择新技术领域</label>
+                    <div class="domain-options" id="newDomainOptions">
+                        <button type="button" class="domain-option" data-value="通用">通用</button>
+                        <button type="button" class="domain-option" data-value="Python">Python</button>
+                        <button type="button" class="domain-option" data-value="Web开发">Web开发</button>
+                        <button type="button" class="domain-option" data-value="AI/机器学习">AI/机器学习</button>
+                        <button type="button" class="domain-option" data-value="数据分析">数据分析</button>
+                        <button type="button" class="domain-option" data-value="Java">Java</button>
+                        <button type="button" class="domain-option" data-value="前端开发">前端开发</button>
+                        <button type="button" class="domain-option" data-value="后端开发">后端开发</button>
+                        <button type="button" class="domain-option" data-value="移动开发">移动开发</button>
+                        <button type="button" class="domain-option" data-value="数据库">数据库</button>
+                    </div>
+                    <input type="hidden" id="newDomain" value="通用">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="cancelDomainBtn">取消</button>
+                <button class="btn btn-primary" id="saveDomainBtn">保存</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        /* ================================
+           用户管理模块 - 与主框架风格统一
+           ================================ */
+        
+        #user-management {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #334155;
+        }
+        
+        /* 头部 */
+        #user-management .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        #user-management .header h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+        
+        #user-management .search-bar {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-management .search-bar input {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            width: 250px;
+            transition: 0.2s;
+        }
+        
+        #user-management .search-bar input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+        }
+        
+        /* 按钮 */
+        #user-management .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        
+        #user-management .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+        }
+        
+        #user-management .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+        }
+        
+        /* 卡片 */
+        #user-management .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #f1f5f9;
+        }
+        
+        #user-management .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fafbfc;
+        }
+        
+        #user-management .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        #user-management .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* 表格 */
+        #user-management .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        #user-management table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #user-management th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+        
+        #user-management td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+        
+        #user-management tr:hover {
+            background: #f9fbfd;
+        }
+        
+        /* 操作按钮组 */
+        #user-management .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        #user-management .action-btn {
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+        
+        #user-management .action-btn.change-domain {
+            background: #e3f2fd;
+            color: #3b82f6;
+        }
+        
+        #user-management .action-btn.edit {
+            background: #fff3e0;
+            color: #f59e0b;
+        }
+        
+        #user-management .action-btn.delete {
+            background: #fee9e6;
+            color: #ef4444;
+        }
+        
+        #user-management .action-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(0.95);
+        }
+        
+        /* 分页 */
+        #user-management .pagination-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 2rem;
+        }
+        
+        /* 模态框 */
+        #user-management .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #user-management .modal-content {
+            background: white;
+            border-radius: 28px;
+            max-width: 500px;
+            width: 90%;
+            overflow: hidden;
+            animation: slideUp 0.2s;
+        }
+        
+        #user-management .modal-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #user-management .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        #user-management .modal-body {
+            padding: 1.5rem;
+        }
+        
+        #user-management .modal-footer {
+            padding: 1rem 1.5rem;
+            background: #f8fafc;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        /* 表单 */
+        #user-management .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        #user-management .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+        
+        #user-management .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+        }
+        
+        /* 技术领域选项 */
+        #user-management .domain-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        #user-management .domain-option {
+            padding: 6px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+        
+        #user-management .domain-option:hover {
+            border-color: #3b82f6;
+            background: #e3f2fd;
+        }
+        
+        #user-management .domain-option.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        /* 动画 */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            #user-management .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #user-management .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</div>

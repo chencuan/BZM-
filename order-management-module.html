@@ -1,0 +1,880 @@
+<!-- 订单管理 -->
+<div id="order-management" class="content-section">
+    <div class="header">
+        <h2><i class="fas fa-file-invoice"></i> 订单管理</h2>
+        <div class="header-actions">
+            <div class="search-bar">
+                <input type="text" placeholder="搜索订单ID、标题、详情...">
+                <button class="btn btn-primary"><i class="fas fa-search"></i> 搜索</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 筛选面板 -->
+    <div class="filter-panel">
+        <div class="filter-row"> 
+            <div class="filter-group">
+                <label>状态:</label>
+                <select class="form-control filter-select" id="statusFilter">
+                    <option value="all">全部状态</option>
+                    <option value="pending">待处理</option>
+                    <option value="teaming">组队中</option>
+                    <option value="connecting">进行中</option>
+                    <option value="completed">已完成</option>
+                    <option value="Review">审核中</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>是否完成:</label>
+                <select class="form-control filter-select" id="completedFilter">
+                    <option value="all">全部</option>
+                    <option value="是">已完成</option>
+                    <option value="否">未完成</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>价格范围:</label>
+                <input type="number" class="form-control filter-input" id="minPriceFilter" placeholder="最低价格">
+                <span class="filter-separator">-</span>
+                <input type="number" class="form-control filter-input" id="maxPriceFilter" placeholder="最高价格">
+            </div>
+            
+            <div class="filter-group">
+                <label>发布时间:</label>
+                <input type="date" class="form-control filter-input" id="startDateFilter">
+                <span class="filter-separator">-</span>
+                <input type="date" class="form-control filter-input" id="endDateFilter">
+            </div>
+        </div>
+
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>一页数量：</label>
+                <select class="form-control filter-select" id="perPageFilter">
+                    <option value="5">5条</option>
+                    <option value="10">10条</option>
+                    <option value="20">20条</option>
+                    <option value="50">50条</option>
+                    <option value="100">100条</option>
+                </select>
+            </div>
+
+            <button id="fetchOrdersBtn" class="btn btn-primary">
+                <i class="fas fa-search"></i> 获取订单
+            </button>
+
+            <button id="resetFiltersBtn" class="btn btn-secondary">
+                <i class="fas fa-redo"></i> 重置筛选
+            </button>
+        </div>
+    </div>
+    
+    <!-- 订单列表 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">订单列表</div>
+            <div class="card-actions">
+                <button class="btn btn-primary" id="addOrderBtn"><i class="fas fa-plus"></i> 添加订单</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>订单ID</th>
+                            <th>需求标题</th>
+                            <th>状态</th>
+                            <th>价格</th>
+                            <th>发布时间</th>
+                            <th>需求时间</th>
+                            <th>是否完成</th>
+                            <th>操作</th>
+                            <th>绑定图片</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 数据将通过JS动态填充 -->
+                        <tr class="no-data-row">
+                            <td colspan="9" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-database" style="font-size: 3rem; color: #ddd; margin-bottom: 15px; display: block;"></i>
+                                <p style="color: #999;">暂无订单数据，点击"获取订单"按钮加载数据</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 分页控件 -->
+            <div id="orderPagination" class="pagination-controls">
+                <!-- 分页按钮将通过JS动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 订单详情/编辑模态框 -->
+    <div class="modal" id="orderDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detailModalTitle">订单详情</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>订单ID</label>
+                        <input type="text" class="form-control" id="detailOrderId" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="detailOrderStatus" disabled>
+                            <option value="pending">待处理</option>
+                            <option value="teaming">组队中</option>
+                            <option value="connecting">进行中</option>
+                            <option value="completed">已完成</option>
+                            <option value="Review">审核中</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>需求标题</label>
+                    <input type="text" class="form-control" id="detailOrderTitle" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>技术领域</label>
+                    <input type="text" class="form-control" id="detailOrderTechnicalDomain" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>查看次数</label>
+                    <input type="text" class="form-control" id="detailOrderViewCount" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>加分量</label>
+                    <input type="text" class="form-control" id="detailOrderExtraPoints" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>价格</label>
+                    <input type="text" class="form-control" id="detailOrderPrice" readonly>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>发布时间</label>
+                        <input type="text" class="form-control" id="detailOrderPublishTime" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>需求时间</label>
+                        <input type="text" class="form-control" id="detailOrderNeedTime" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>是否完成</label>
+                    <input type="text" class="form-control" id="detailOrderCompleted" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>详细需求</label>
+                    <textarea class="form-control" id="detailOrderDetails" rows="3" readonly></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>接单用户</label>
+                    <input type="text" class="form-control" id="detailOrderAccepters" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>订单发布者</label>
+                    <input type="text" class="form-control" id="detailOrderPublisher" readonly>
+                </div>
+
+                <!-- 编辑模式下的额外字段 -->
+                <div id="editModeFields" style="display: none;">
+                    <div class="form-group">
+                        <label>审核意见</label>
+                        <textarea class="form-control" id="reviewComment" rows="3" placeholder="请输入审核意见..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>技术关键词（可选）</label>
+                        <input type="text" class="form-control" id="techKeywords" placeholder="请输入技术关键词，用逗号分隔">
+                    </div>
+
+                    <div class="form-group">
+                        <label>对接群二维码</label>
+                        <div class="image-upload-container">
+                            <div class="image-preview" id="qrCodePreview">
+                                <div class="no-image">暂无图片</div>
+                            </div>
+                            <div class="upload-actions">
+                                <input type="file" id="qrCodeUpload" accept="image/*" style="display: none;">
+                                <button class="btn btn-secondary" id="uploadQrCodeBtn">
+                                    <i class="fas fa-upload"></i> 上传二维码
+                                </button>
+                                <button class="btn btn-info" id="viewQrCodeBtn" style="display: none;">
+                                    <i class="fas fa-eye"></i> 查看原图
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>跟进记录</label>
+                    <div id="followupLogs" class="followup-container">
+                        <!-- 跟进记录将通过JS动态添加 -->
+                        <div class="no-logs">暂无跟进记录</div>
+                    </div>
+                    <div class="form-row" style="margin-top: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <input type="text" class="form-control" id="newFollowup" placeholder="添加新的跟进记录...">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-primary" id="addFollowupBtn">添加</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="rejectBtn" style="display: none;">
+                    <i class="fas fa-times"></i> 拒绝
+                </button>
+                <button class="btn btn-success" id="approveBtn" style="display: none;">
+                    <i class="fas fa-check"></i> 通过审核
+                </button>
+                <button class="btn btn-warning" id="editOrderBtn">
+                    <i class="fas fa-edit"></i> 编辑订单
+                </button>
+                <button class="btn btn-primary" id="saveOrderBtn" style="display: none;">
+                    <i class="fas fa-save"></i> 保存修改
+                </button>
+                <button class="btn btn-secondary" id="cancelEditBtn" style="display: none;">
+                    <i class="fas fa-times"></i> 取消编辑
+                </button>
+                <button class="btn" id="closeDetailBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加审核模态框 -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>订单审核</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>订单ID</label>
+                        <input type="text" class="form-control" id="reviewOrderId" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>需求标题</label>
+                        <input type="text" class="form-control" id="reviewOrderTitle" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>价格</label>
+                        <input type="text" class="form-control" id="reviewOrderPrice" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>推荐技术</label>
+                        <input type="text" class="form-control" id="reviewOrderTech" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>详细需求</label>
+                    <textarea class="form-control" id="reviewOrderDetails" rows="3" readonly></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="cancelReviewBtn">取消</button>
+                <button class="btn btn-success" id="confirmReviewBtn">通过审核</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* ================================
+           订单管理模块 - 与主框架风格统一
+           ================================ */
+        
+        #order-management {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #334155;
+        }
+        
+        /* 头部 */
+        #order-management .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        #order-management .header h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+        
+        /* 搜索栏 */
+        #order-management .search-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        #order-management .search-bar input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            min-width: 300px;
+            transition: all 0.3s;
+            background: #fff;
+        }
+        
+        #order-management .search-bar input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* 筛选面板 */
+        #order-management .filter-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+        
+        #order-management .filter-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.2rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        
+        #order-management .filter-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        #order-management .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        #order-management .filter-group label {
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+        
+        #order-management .filter-select,
+        #order-management .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: #fff;
+            transition: all 0.2s;
+        }
+        
+        #order-management .filter-select:focus,
+        #order-management .filter-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        
+        #order-management .filter-select {
+            min-width: 140px;
+        }
+        
+        #order-management .filter-input {
+            width: 130px;
+        }
+        
+        #order-management .filter-separator {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        
+        /* 按钮通用样式 */
+        #order-management .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+        
+        #order-management .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+        
+        #order-management .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        #order-management .btn-secondary {
+            background: #f1f2f6;
+            color: #2c3e50;
+            border: 1px solid #e2e8f0;
+        }
+        
+        #order-management .btn-secondary:hover {
+            background: #e2e6ea;
+            transform: translateY(-2px);
+        }
+        
+        #order-management .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        #order-management .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        #order-management .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        #order-management .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        #order-management .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        #order-management .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        
+        #order-management .btn-info {
+            background: #1abc9c;
+            color: white;
+        }
+        
+        /* 卡片 */
+        #order-management .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            border: 1px solid #f1f5f9;
+        }
+        
+        #order-management .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fafbfc;
+        }
+        
+        #order-management .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        #order-management .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* 表格 */
+        #order-management .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        #order-management table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #order-management table th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #order-management table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        
+        #order-management table tr:hover {
+            background: #f9fbfd;
+        }
+        
+        /* 状态标签 */
+        #order-management .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 70px;
+        }
+        
+        #order-management .status-pending {
+            background: #fff3e0;
+            color: #f39c12;
+        }
+        
+        #order-management .status-teaming {
+            background: #e3f2fd;
+            color: #3498db;
+        }
+        
+        #order-management .status-connecting {
+            background: #e8f8f5;
+            color: #2ecc71;
+        }
+        
+        #order-management .status-completed {
+            background: #f3e5f5;
+            color: #9b59b6;
+        }
+        
+        #order-management .status-review {
+            background: #fee9e6;
+            color: #e74c3c;
+        }
+        
+        /* 操作按钮组 */
+        #order-management .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        #order-management .action-btn {
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+        
+        #order-management .action-btn-view {
+            background: #e3f2fd;
+            color: #3498db;
+        }
+        
+        #order-management .action-btn-edit {
+            background: #fff3e0;
+            color: #f39c12;
+        }
+        
+        #order-management .action-btn-delete {
+            background: #fee9e6;
+            color: #e74c3c;
+        }
+        
+        #order-management .action-btn-review {
+            background: #e8f8f5;
+            color: #27ae60;
+        }
+        
+        #order-management .action-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(0.95);
+        }
+        
+        /* 分页控件 */
+        #order-management .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        #order-management .pagination-btn {
+            padding: 8px 14px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+        
+        #order-management .pagination-btn:hover:not(.disabled) {
+            background: #f1f2f6;
+            border-color: #cbd5e1;
+        }
+        
+        #order-management .pagination-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        /* 模态框 */
+        #order-management .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        #order-management .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        #order-management .modal-header {
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #order-management .modal-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+        
+        #order-management .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+            transition: transform 0.2s;
+        }
+        
+        #order-management .close-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        #order-management .modal-body {
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        #order-management .modal-footer {
+            padding: 1rem 1.5rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        /* 表单 */
+        #order-management .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        #order-management .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #334155;
+            font-size: 0.85rem;
+        }
+        
+        #order-management .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        #order-management .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        #order-management .form-control[readonly] {
+            background: #f8fafc;
+            color: #5a6e7c;
+        }
+        
+        #order-management .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        #order-management .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        /* 跟进记录 */
+        #order-management .followup-container {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            background: #fefefe;
+        }
+        
+        #order-management .followup-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        #order-management .followup-time {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+        }
+        
+        #order-management .followup-content {
+            font-size: 0.85rem;
+            color: #334155;
+        }
+        
+        #order-management .no-logs {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        /* 图片上传区 */
+        #order-management .image-upload-container {
+            border: 2px dashed #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            background: #fefefe;
+            transition: border 0.2s;
+        }
+        
+        #order-management .image-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 12px;
+        }
+        
+        #order-management .upload-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            #order-management .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #order-management .filter-group {
+                justify-content: space-between;
+            }
+            #order-management .form-row {
+                flex-direction: column;
+            }
+            #order-management .modal-footer {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</div>
